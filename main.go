@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -16,11 +17,11 @@ var (
 )
 
 func main() {
-	channelSecret := os.Getenv("LINE_CHANNEL_SECRET")
+	channelSecret = os.Getenv("LINE_CHANNEL_SECRET")
 	if channelSecret == "" {
 		log.Fatal("LINE_CHANNEL_SECRET must be set")
 	}
-	channelToken := os.Getenv("LINE_CHANNEL_TOKEN")
+	channelToken = os.Getenv("LINE_CHANNEL_TOKEN")
 	if channelToken == "" {
 		log.Fatal("LINE_CHANNEL_TOKEN must be set")
 	}
@@ -46,6 +47,8 @@ func main() {
 
 type callbackFunc func(w http.ResponseWriter, req *http.Request)
 
+var messages []string
+
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 	return callbackFunc(func(w http.ResponseWriter, req *http.Request) {
 		log.Println("/callback called...")
@@ -69,12 +72,20 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 			case webhook.MessageEvent:
 				switch message := e.Message.(type) {
 				case webhook.TextMessageContent:
+					var body string
+					if message.Text == "一覧" {
+						body = listMessage(messages)
+					} else {
+						body = buildMessage(message.Text)
+						messages = append(messages, message.Text)
+					}
+
 					if _, err = cli.ReplyMessage(
 						&messaging_api.ReplyMessageRequest{
 							ReplyToken: e.ReplyToken,
 							Messages: []messaging_api.MessageInterface{
 								messaging_api.TextMessage{
-									Text: message.Text,
+									Text: body,
 								},
 							},
 						},
@@ -91,4 +102,16 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 			}
 		}
 	})
+}
+
+func buildMessage(text string) string {
+	return fmt.Sprintf("\"%s\" 記録しました", text)
+}
+
+func listMessage(messages []string) string {
+	var body string
+	for _, message := range messages {
+		body += message + "\n"
+	}
+	return fmt.Sprintf("記録一覧\n%s", body)
 }
