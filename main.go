@@ -49,10 +49,6 @@ func main() {
 	}
 }
 
-type callbackFunc func(w http.ResponseWriter, req *http.Request)
-
-var messages []string
-
 var messageBuilders []messageBuilder
 
 type messageBuilder interface {
@@ -85,13 +81,13 @@ func (s registerResponse) buildMessage(text string) string {
 	return fmt.Sprintf("registered succcessfully: %s", text)
 }
 
-func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
+func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWriter, req *http.Request) {
 	messageBuilders = []messageBuilder{
 		registerResponse{},
 		nopResponse{},
 	}
 
-	return callbackFunc(func(w http.ResponseWriter, req *http.Request) {
+	return func(w http.ResponseWriter, req *http.Request) {
 		slog.Debug("/callback called...")
 
 		cb, err := webhook.ParseRequest(channelSecret, req)
@@ -146,17 +142,5 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 				w.WriteHeader(400)
 			}
 		}
-	})
-}
-
-func buildMessage(text string) string {
-	return fmt.Sprintf("\"%s\" 記録しました", text)
-}
-
-func listMessage(messages []string) string {
-	var body string
-	for _, message := range messages {
-		body += message + "\n"
 	}
-	return fmt.Sprintf("記録一覧\n%s", body)
 }
