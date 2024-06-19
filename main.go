@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"reflect"
+	"regexp"
 
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 	"github.com/line/line-bot-sdk-go/v8/linebot/webhook"
@@ -68,8 +70,24 @@ func (s nopResponse) buildMessage(text string) string {
 	return text
 }
 
+type registerResponse struct{}
+
+func (s registerResponse) accept(text string) bool {
+	match, err := regexp.MatchString(`^(?:[01][0-9]|2[0-3])[0-5][0-9] .*$`, text)
+	if err != nil {
+		slog.Warn(fmt.Sprintf("failed to match: %s", text))
+		return false
+	}
+	return match
+}
+
+func (s registerResponse) buildMessage(text string) string {
+	return fmt.Sprintf("registered succcessfully: %s", text)
+}
+
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 	messageBuilders = []messageBuilder{
+		registerResponse{},
 		nopResponse{},
 	}
 
@@ -98,6 +116,7 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 					var body string
 					for _, builder := range messageBuilders {
 						if builder.accept(message.Text) {
+							slog.Debug(fmt.Sprintf("response builder: %s", reflect.TypeOf(builder).Name()))
 							body = builder.buildMessage(message.Text)
 							break
 						}
