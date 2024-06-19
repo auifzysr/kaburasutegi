@@ -3,7 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 
@@ -17,13 +17,15 @@ var (
 )
 
 func main() {
+	slog.SetLogLoggerLevel(slog.LevelDebug)
+
 	channelSecret = os.Getenv("LINE_CHANNEL_SECRET")
 	if channelSecret == "" {
-		log.Fatal("LINE_CHANNEL_SECRET must be set")
+		slog.Error("LINE_CHANNEL_SECRET must be set")
 	}
 	channelToken = os.Getenv("LINE_CHANNEL_TOKEN")
 	if channelToken == "" {
-		log.Fatal("LINE_CHANNEL_TOKEN must be set")
+		slog.Error("LINE_CHANNEL_TOKEN must be set")
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -34,14 +36,14 @@ func main() {
 		channelToken,
 	)
 	if err != nil {
-		log.Fatal(err)
+		slog.Error(fmt.Sprintf("%s", err))
 	}
 
 	// Setup HTTP Server for receiving requests from LINE platform
 	http.HandleFunc("/callback", callbackWithAPI(cli))
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		log.Fatal(err)
+		slog.Error(fmt.Sprintf("%s", err))
 	}
 }
 
@@ -51,11 +53,11 @@ var messages []string
 
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 	return callbackFunc(func(w http.ResponseWriter, req *http.Request) {
-		log.Println("/callback called...")
+		slog.Debug("/callback called...")
 
 		cb, err := webhook.ParseRequest(channelSecret, req)
 		if err != nil {
-			log.Printf("Cannot parse request: %+v\n", err)
+			slog.Error(fmt.Sprintf("Cannot parse request: %+v\n", err))
 			if errors.Is(err, webhook.ErrInvalidSignature) {
 				w.WriteHeader(400)
 			} else {
@@ -64,9 +66,9 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 			return
 		}
 
-		log.Println("Handling events...")
+		slog.Debug("Handling events...")
 		for _, event := range cb.Events {
-			log.Printf("/callback called%+v...\n", event)
+			slog.Debug(fmt.Sprintf("/callback called%+v...\n", event))
 
 			switch e := event.(type) {
 			case webhook.MessageEvent:
@@ -90,15 +92,16 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 							},
 						},
 					); err != nil {
-						log.Print(err)
+						slog.Error(fmt.Sprintf("%s", err))
+						w.WriteHeader(400)
 					} else {
-						log.Println("Sent text reply.")
+						slog.Debug("Sent text reply.")
 					}
 				default:
-					log.Printf("Unsupported message content: %T\n", e.Message)
+					slog.Error(fmt.Sprintf("Unsupported message content: %T\n", e.Message))
 				}
 			default:
-				log.Printf("Unsupported message: %T\n", event)
+				slog.Error(fmt.Sprintf("Unsupported message: %T\n", event))
 			}
 		}
 	})
