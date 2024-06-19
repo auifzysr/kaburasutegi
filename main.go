@@ -93,15 +93,17 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 						},
 					); err != nil {
 						slog.Error(fmt.Sprintf("%s", err))
-						w.WriteHeader(400)
+						w.WriteHeader(500)
 					} else {
 						slog.Debug("Sent text reply.")
 					}
 				default:
 					slog.Error(fmt.Sprintf("Unsupported message content: %T\n", e.Message))
+					w.WriteHeader(400)
 				}
 			default:
 				slog.Error(fmt.Sprintf("Unsupported message: %T\n", event))
+				w.WriteHeader(400)
 			}
 		}
 	})
