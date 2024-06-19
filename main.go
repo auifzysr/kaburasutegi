@@ -81,11 +81,45 @@ func (s registerResponse) buildMessage(text string) string {
 	return fmt.Sprintf("registered succcessfully: %s", text)
 }
 
+type recorderRepository interface {
+	record(text string) error
+	recordAt(id int, text string) error
+	readAt(id int) (string, error)
+}
+
+type localRecord struct {
+	records map[int]string
+}
+
+func (s *localRecord) record(text string) error {
+	return s.recordAt(len(s.records), text)
+}
+
+func (s *localRecord) recordAt(id int, text string) error {
+	if s.records == nil {
+		s.records = make(map[int]string)
+	}
+	s.records[id] = text
+	return nil
+}
+
+func (s *localRecord) readAt(id int) (string, error) {
+	if s.records == nil {
+		s.records = make(map[int]string)
+	}
+	if text, ok := s.records[id]; ok {
+		return text, nil
+	}
+	return "", fmt.Errorf("not found")
+}
+
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWriter, req *http.Request) {
 	messageBuilders = []messageBuilder{
 		registerResponse{},
 		nopResponse{},
 	}
+
+	recorder := &localRecord{}
 
 	return func(w http.ResponseWriter, req *http.Request) {
 		slog.Debug("/callback called...")
@@ -114,6 +148,8 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWri
 						if builder.accept(message.Text) {
 							slog.Debug(fmt.Sprintf("response builder: %s", reflect.TypeOf(builder).Name()))
 							body = builder.buildMessage(message.Text)
+							recorder.record(body)
+							slog.Debug(fmt.Sprintf("records: %+v", recorder.records))
 							break
 						}
 					}
