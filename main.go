@@ -51,7 +51,28 @@ type callbackFunc func(w http.ResponseWriter, req *http.Request)
 
 var messages []string
 
+var messageBuilders []messageBuilder
+
+type messageBuilder interface {
+	accept(text string) bool
+	buildMessage(text string) string
+}
+
+type nopResponse struct{}
+
+func (s nopResponse) accept(text string) bool {
+	return true
+}
+
+func (s nopResponse) buildMessage(text string) string {
+	return text
+}
+
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
+	messageBuilders = []messageBuilder{
+		nopResponse{},
+	}
+
 	return callbackFunc(func(w http.ResponseWriter, req *http.Request) {
 		slog.Debug("/callback called...")
 
@@ -75,11 +96,11 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) callbackFunc {
 				switch message := e.Message.(type) {
 				case webhook.TextMessageContent:
 					var body string
-					if message.Text == "一覧" {
-						body = listMessage(messages)
-					} else {
-						body = buildMessage(message.Text)
-						messages = append(messages, message.Text)
+					for _, builder := range messageBuilders {
+						if builder.accept(message.Text) {
+							body = builder.buildMessage(message.Text)
+							break
+						}
 					}
 
 					if _, err = cli.ReplyMessage(
