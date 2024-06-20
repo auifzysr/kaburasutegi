@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"reflect"
 	"regexp"
 
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
@@ -79,6 +78,11 @@ func (s register) buildMessage(text string) string {
 	return fmt.Sprintf("registered succcessfully: %s", text)
 }
 
+type service struct {
+	messageHandler
+	recorder
+}
+
 type recorder interface {
 	record(text string) error
 	recordAt(id int, text string) error
@@ -112,12 +116,16 @@ func (s *localRecord) readAt(id int) (string, error) {
 }
 
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWriter, req *http.Request) {
-	messageHandlers := []messageHandler{
-		register{},
-		nop{},
+	ss := []*service{
+		{
+			messageHandler: register{},
+			recorder:       &localRecord{},
+		},
+		{
+			messageHandler: nop{},
+			recorder:       &localRecord{},
+		},
 	}
-
-	recorder := &localRecord{}
 
 	return func(w http.ResponseWriter, req *http.Request) {
 		slog.Debug("/callback called...")
@@ -142,14 +150,17 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWri
 				switch message := e.Message.(type) {
 				case webhook.TextMessageContent:
 					var body string
-					for _, builder := range messageHandlers {
-						if builder.accept(message.Text) {
-							slog.Debug(fmt.Sprintf("response builder: %s", reflect.TypeOf(builder).Name()))
-							body = builder.buildMessage(message.Text)
-							recorder.record(body)
-							slog.Debug(fmt.Sprintf("records: %+v", recorder.records))
+					slog.Debug(fmt.Sprintf("message: %+v", message))
+					for _, s := range ss {
+						if s.messageHandler.accept(message.Text) {
+							body = s.messageHandler.buildMessage(message.Text)
+							slog.Debug(fmt.Sprintf("body: %s", body))
+							s.recorder.record(body)
 							break
 						}
+					}
+					if body == "" {
+						body = "error: no such handler"
 					}
 
 					if _, err = cli.ReplyMessage(
