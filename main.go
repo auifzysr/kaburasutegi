@@ -49,9 +49,9 @@ func main() {
 	}
 }
 
-var messageBuilders []messageBuilder
+var messageHandlers []messageHandler
 
-type messageBuilder interface {
+type messageHandler interface {
 	accept(text string) bool
 	buildMessage(text string) string
 }
@@ -114,7 +114,7 @@ func (s *localRecord) readAt(id int) (string, error) {
 }
 
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWriter, req *http.Request) {
-	messageBuilders = []messageBuilder{
+	messageHandlers = []messageHandler{
 		registerResponse{},
 		nopResponse{},
 	}
@@ -144,7 +144,7 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWri
 				switch message := e.Message.(type) {
 				case webhook.TextMessageContent:
 					var body string
-					for _, builder := range messageBuilders {
+					for _, builder := range messageHandlers {
 						if builder.accept(message.Text) {
 							slog.Debug(fmt.Sprintf("response builder: %s", reflect.TypeOf(builder).Name()))
 							body = builder.buildMessage(message.Text)
