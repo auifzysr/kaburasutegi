@@ -6,8 +6,8 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"regexp"
 
+	"github.com/auifzysr/kaburasutegi/domain"
 	"github.com/auifzysr/kaburasutegi/infra"
 	"github.com/auifzysr/kaburasutegi/repository"
 
@@ -60,49 +60,19 @@ func main() {
 	}
 }
 
-type messageHandler interface {
-	accept(text string) bool
-	buildMessage(text string) string
-}
-
-type nop struct{}
-
-func (s nop) accept(text string) bool {
-	return true
-}
-
-func (s nop) buildMessage(text string) string {
-	return text
-}
-
-type register struct{}
-
-func (s register) accept(text string) bool {
-	match, err := regexp.MatchString(`^(?:[01][0-9]|2[0-3])[0-5][0-9] .*$`, text)
-	if err != nil {
-		slog.Warn(fmt.Sprintf("failed to match: %s", text))
-		return false
-	}
-	return match
-}
-
-func (s register) buildMessage(text string) string {
-	return fmt.Sprintf("registered succcessfully: %s", text)
-}
-
 type service struct {
-	messageHandler
+	domain.MessageHandler
 	repository.Recorder
 }
 
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWriter, req *http.Request) {
 	ss := []*service{
 		{
-			messageHandler: register{},
+			MessageHandler: domain.Register{},
 			Recorder:       &infra.LocalRecord{},
 		},
 		{
-			messageHandler: nop{},
+			MessageHandler: domain.Nop{},
 			Recorder:       &infra.LocalRecord{},
 		},
 	}
@@ -131,8 +101,8 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWri
 					var body string
 					slog.Debug(fmt.Sprintf("message: %+v", message))
 					for _, s := range ss {
-						if s.messageHandler.accept(message.Text) {
-							body = s.messageHandler.buildMessage(message.Text)
+						if s.MessageHandler.Accept(message.Text) {
+							body = s.MessageHandler.BuildMessage(message.Text)
 							slog.Debug(fmt.Sprintf("body: %s", body))
 							s.Recorder.Record(body)
 							break
