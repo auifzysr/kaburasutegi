@@ -28,10 +28,12 @@ func main() {
 	channelSecret = os.Getenv("LINE_CHANNEL_SECRET")
 	if channelSecret == "" {
 		slog.Error("LINE_CHANNEL_SECRET must be set")
+		os.Exit(1)
 	}
 	channelToken = os.Getenv("LINE_CHANNEL_TOKEN")
 	if channelToken == "" {
 		slog.Error("LINE_CHANNEL_TOKEN must be set")
+		os.Exit(1)
 	}
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -43,6 +45,7 @@ func main() {
 	)
 	if err != nil {
 		slog.Error(fmt.Sprintf("%s", err))
+		os.Exit(1)
 	}
 
 	// Setup HTTP Server for receiving requests from LINE platform
@@ -50,6 +53,7 @@ func main() {
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
 		slog.Error(fmt.Sprintf("%s", err))
+		os.Exit(1)
 	}
 }
 
