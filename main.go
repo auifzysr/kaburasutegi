@@ -18,7 +18,12 @@ var (
 )
 
 func main() {
-	slog.SetLogLoggerLevel(slog.LevelDebug)
+	if env := os.Getenv("ENV"); env == "local" {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	} else {
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+		slog.SetLogLoggerLevel(slog.LevelInfo)
+	}
 
 	channelSecret = os.Getenv("LINE_CHANNEL_SECRET")
 	if channelSecret == "" {
@@ -128,7 +133,7 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWri
 	}
 
 	return func(w http.ResponseWriter, req *http.Request) {
-		slog.Debug("/callback called...")
+		slog.Info("/callback called...")
 
 		cb, err := webhook.ParseRequest(channelSecret, req)
 		if err != nil {
@@ -141,7 +146,6 @@ func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWri
 			return
 		}
 
-		slog.Debug("Handling events...")
 		for _, event := range cb.Events {
 			slog.Debug(fmt.Sprintf("/callback called%+v...\n", event))
 
