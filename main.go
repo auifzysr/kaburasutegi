@@ -49,26 +49,24 @@ func main() {
 	}
 }
 
-var messageHandlers []messageHandler
-
 type messageHandler interface {
 	accept(text string) bool
 	buildMessage(text string) string
 }
 
-type nopResponse struct{}
+type nop struct{}
 
-func (s nopResponse) accept(text string) bool {
+func (s nop) accept(text string) bool {
 	return true
 }
 
-func (s nopResponse) buildMessage(text string) string {
+func (s nop) buildMessage(text string) string {
 	return text
 }
 
-type registerResponse struct{}
+type register struct{}
 
-func (s registerResponse) accept(text string) bool {
+func (s register) accept(text string) bool {
 	match, err := regexp.MatchString(`^(?:[01][0-9]|2[0-3])[0-5][0-9] .*$`, text)
 	if err != nil {
 		slog.Warn(fmt.Sprintf("failed to match: %s", text))
@@ -77,11 +75,11 @@ func (s registerResponse) accept(text string) bool {
 	return match
 }
 
-func (s registerResponse) buildMessage(text string) string {
+func (s register) buildMessage(text string) string {
 	return fmt.Sprintf("registered succcessfully: %s", text)
 }
 
-type recorderRepository interface {
+type recorder interface {
 	record(text string) error
 	recordAt(id int, text string) error
 	readAt(id int) (string, error)
@@ -114,9 +112,9 @@ func (s *localRecord) readAt(id int) (string, error) {
 }
 
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWriter, req *http.Request) {
-	messageHandlers = []messageHandler{
-		registerResponse{},
-		nopResponse{},
+	messageHandlers := []messageHandler{
+		register{},
+		nop{},
 	}
 
 	recorder := &localRecord{}
