@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/auifzysr/kaburasutegi/domain"
+	"github.com/auifzysr/kaburasutegi/handler"
 	"github.com/auifzysr/kaburasutegi/infra"
 	"github.com/auifzysr/kaburasutegi/repository"
 
@@ -21,27 +22,25 @@ var (
 )
 
 func main() {
-	if env := os.Getenv("ENV"); env == "local" {
+	if env := handler.Env(); env == "local" {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
 	} else {
 		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
 		slog.SetLogLoggerLevel(slog.LevelInfo)
 	}
 
-	channelSecret = os.Getenv("LINE_CHANNEL_SECRET")
-	if channelSecret == "" {
-		slog.Error("LINE_CHANNEL_SECRET must be set")
+	var err error
+	channelSecret, err = handler.LineChannelSecret()
+	if err != nil {
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
-	channelToken = os.Getenv("LINE_CHANNEL_TOKEN")
-	if channelToken == "" {
-		slog.Error("LINE_CHANNEL_TOKEN must be set")
+	channelToken, err = handler.LineChannelToken()
+	if err != nil {
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "5000"
-	}
+	port := handler.Port()
 
 	cli, err := messaging_api.NewMessagingApiAPI(
 		channelToken,
@@ -55,7 +54,7 @@ func main() {
 	http.HandleFunc("/callback", callbackWithAPI(cli))
 
 	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		slog.Error(fmt.Sprintf("%s", err))
+		slog.Error(err.Error())
 		os.Exit(1)
 	}
 }
