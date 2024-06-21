@@ -8,6 +8,10 @@ import (
 	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 )
 
+const (
+	defaultSecretVersion = "latest"
+)
+
 func accessSecretVersion(projectID, secretID, versionID string) (string, error) {
 	if projectID == "" {
 		return "", fmt.Errorf("projectID is required")

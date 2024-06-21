@@ -5,10 +5,6 @@ import (
 	"os"
 )
 
-const (
-	defaultSecretVersion = "latest"
-)
-
 func LineChannelToken() (string, error) {
 	channelToken := os.Getenv("LINE_CHANNEL_TOKEN")
 	if channelToken != "" {
