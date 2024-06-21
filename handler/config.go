@@ -5,12 +5,25 @@ import (
 	"os"
 )
 
+const (
+	defaultSecretVersion = "latest"
+)
+
 func LineChannelToken() (string, error) {
 	channelToken := os.Getenv("LINE_CHANNEL_TOKEN")
-	if channelToken == "" {
-		return "", fmt.Errorf("LINE_CHANNEL_TOKEN must be set")
+	if channelToken != "" {
+		return channelToken, nil
 	}
 
+	// TODO: get from cmd arguments
+	projectID := ""
+	secretID := ""
+	versionID := defaultSecretVersion
+
+	channelToken, err := accessSecretVersion(projectID, secretID, versionID)
+	if err != nil {
+		return "", err
+	}
 	return channelToken, nil
 }
 
@@ -19,6 +32,7 @@ func LineChannelSecret() (string, error) {
 	if channelSecret == "" {
 		return "", fmt.Errorf("LINE_CHANNEL_SECRET must be set")
 	}
+	// TOOD: get from secretmanager
 
 	return channelSecret, nil
 }
