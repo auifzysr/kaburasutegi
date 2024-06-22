@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"log/slog"
-	"net/http"
 	"os"
 
+	"github.com/GoogleCloudPlatform/functions-framework-go/funcframework"
+	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/auifzysr/kaburasutegi/domain"
 	"github.com/auifzysr/kaburasutegi/handler"
 	"github.com/auifzysr/kaburasutegi/infra"
@@ -17,14 +18,14 @@ var (
 	channelToken  string
 )
 
-func serve(port string, s *service.Service) error {
-	http.HandleFunc("/callback", s.Respond())
+const (
+	defaultHostname = "0.0.0.0"
+)
 
-	if err := http.ListenAndServe(":"+port, nil); err != nil {
-		slog.Error(err.Error())
-		os.Exit(1)
-	}
-	return nil
+func serve(port string, s *service.Service) error {
+	functions.HTTP("callback", s.Respond())
+
+	return funcframework.StartHostPort(defaultHostname, port)
 }
 
 func setup() (string, *service.Service) {
