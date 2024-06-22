@@ -5,18 +5,21 @@ import (
 	"os"
 )
 
-func LineChannelToken() (string, error) {
+func LineChannelToken(opts ...SecretManagerOption) (string, error) {
 	channelToken := os.Getenv("LINE_CHANNEL_TOKEN")
 	if channelToken != "" {
 		return channelToken, nil
 	}
 
 	// TODO: get from cmd arguments
-	projectID := ""
-	secretID := ""
-	versionID := defaultSecretVersion
+	s := &SecretManagerConfig{
+		versionID: defaultSecretVersion,
+	}
+	for _, opt := range opts {
+		opt(s)
+	}
 
-	channelToken, err := accessSecretVersion(projectID, secretID, versionID)
+	channelToken, err := accessSecretVersion(s)
 	if err != nil {
 		return "", err
 	}

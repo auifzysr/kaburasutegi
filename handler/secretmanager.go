@@ -12,14 +12,40 @@ const (
 	defaultSecretVersion = "latest"
 )
 
-func accessSecretVersion(projectID, secretID, versionID string) (string, error) {
-	if projectID == "" {
+type SecretManagerConfig struct {
+	projectID string
+	secretID  string
+	versionID string
+}
+
+type SecretManagerOption func(*SecretManagerConfig)
+
+func WithProjectID(projectID string) SecretManagerOption {
+	return func(config *SecretManagerConfig) {
+		config.projectID = projectID
+	}
+}
+
+func WithSecretID(secretID string) SecretManagerOption {
+	return func(config *SecretManagerConfig) {
+		config.secretID = secretID
+	}
+}
+
+func WithVersionID(versionID string) SecretManagerOption {
+	return func(config *SecretManagerConfig) {
+		config.versionID = versionID
+	}
+}
+
+func accessSecretVersion(s *SecretManagerConfig) (string, error) {
+	if s.projectID == "" {
 		return "", fmt.Errorf("projectID is required")
 	}
-	if secretID == "" {
+	if s.secretID == "" {
 		return "", fmt.Errorf("secretID is required")
 	}
-	if versionID == "" {
+	if s.versionID == "" {
 		return "", fmt.Errorf("versionID is required")
 	}
 
@@ -31,7 +57,7 @@ func accessSecretVersion(projectID, secretID, versionID string) (string, error) 
 	defer client.Close()
 
 	accessRequest := &secretmanagerpb.AccessSecretVersionRequest{
-		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/%s", projectID, secretID, versionID),
+		Name: fmt.Sprintf("projects/%s/secrets/%s/versions/%s", s.projectID, s.secretID, s.versionID),
 	}
 
 	result, err := client.AccessSecretVersion(ctx, accessRequest)
