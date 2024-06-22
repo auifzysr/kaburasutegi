@@ -10,7 +10,7 @@ import (
 	"github.com/auifzysr/kaburasutegi/domain"
 	"github.com/auifzysr/kaburasutegi/handler"
 	"github.com/auifzysr/kaburasutegi/infra"
-	"github.com/auifzysr/kaburasutegi/repository"
+	"github.com/auifzysr/kaburasutegi/service"
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 	"github.com/line/line-bot-sdk-go/v8/linebot/webhook"
 	"github.com/urfave/cli/v2"
@@ -76,13 +76,8 @@ func serveCommand() *cli.Command {
 	}
 }
 
-type service struct {
-	domain.MessageHandler
-	repository.Recorder
-}
-
 func callbackWithAPI(cli *messaging_api.MessagingApiAPI) func(w http.ResponseWriter, req *http.Request) {
-	ss := []*service{
+	ss := []*service.Service{
 		{
 			MessageHandler: domain.Register{},
 			Recorder:       &infra.LocalRecord{},
