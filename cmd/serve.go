@@ -30,14 +30,17 @@ func serve() error {
 	}
 
 	var err error
-	channelSecret, err = handler.LineChannelSecret()
+	channelSecret, err = handler.LineChannelSecret(
+		handler.WithProjectID(projectID),
+		handler.WithSecretID(channelSecretSecretID),
+	)
 	if err != nil {
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
 	channelToken, err = handler.LineChannelToken(
 		handler.WithProjectID(projectID),
-		handler.WithSecretID(secretID),
+		handler.WithSecretID(channelTokenSecretID),
 	)
 	if err != nil {
 		slog.Error(err.Error())

@@ -7,9 +7,9 @@ import (
 )
 
 var (
-	projectID string
-	secretID  string
-	versionID string
+	projectID             string
+	channelTokenSecretID  string
+	channelSecretSecretID string
 )
 
 func Run() error {
@@ -23,18 +23,18 @@ func Run() error {
 				Destination: &projectID,
 			},
 			&cli.StringFlag{
-				Name:        "secretID",
-				Aliases:     []string{"s"},
+				Name:        "channelTokenSecretID",
+				Aliases:     []string{"t"},
 				Value:       "",
-				Usage:       "secretID",
-				Destination: &secretID,
+				Usage:       "secretID of channel token",
+				Destination: &channelTokenSecretID,
 			},
 			&cli.StringFlag{
-				Name:        "versionID",
-				Aliases:     []string{"v"},
+				Name:        "channelSecretSecretID",
+				Aliases:     []string{"s"},
 				Value:       "",
-				Usage:       "versionID",
-				Destination: &versionID,
+				Usage:       "secretID of channel secret",
+				Destination: &channelSecretSecretID,
 			},
 		},
 		Commands: []*cli.Command{

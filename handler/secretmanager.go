@@ -18,21 +18,21 @@ type SecretManagerConfig struct {
 	versionID string
 }
 
-type SecretManagerOption func(*SecretManagerConfig)
+type SecretManagerParam func(*SecretManagerConfig)
 
-func WithProjectID(projectID string) SecretManagerOption {
+func WithProjectID(projectID string) SecretManagerParam {
 	return func(config *SecretManagerConfig) {
 		config.projectID = projectID
 	}
 }
 
-func WithSecretID(secretID string) SecretManagerOption {
+func WithSecretID(secretID string) SecretManagerParam {
 	return func(config *SecretManagerConfig) {
 		config.secretID = secretID
 	}
 }
 
-func WithVersionID(versionID string) SecretManagerOption {
+func WithVersionID(versionID string) SecretManagerParam {
 	return func(config *SecretManagerConfig) {
 		config.versionID = versionID
 	}

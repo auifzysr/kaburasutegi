@@ -2,16 +2,16 @@ package handler
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 )
 
-func LineChannelToken(opts ...SecretManagerOption) (string, error) {
+func LineChannelToken(opts ...SecretManagerParam) (string, error) {
 	channelToken := os.Getenv("LINE_CHANNEL_TOKEN")
 	if channelToken != "" {
 		return channelToken, nil
 	}
 
-	// TODO: get from cmd arguments
 	s := &SecretManagerConfig{
 		versionID: defaultSecretVersion,
 	}
@@ -19,19 +19,34 @@ func LineChannelToken(opts ...SecretManagerOption) (string, error) {
 		opt(s)
 	}
 
+	slog.Debug("rerieving channel token  from secret manager...")
+
 	channelToken, err := accessSecretVersion(s)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to get channel token: %w", err)
 	}
 	return channelToken, nil
 }
 
-func LineChannelSecret() (string, error) {
+func LineChannelSecret(opts ...SecretManagerParam) (string, error) {
 	channelSecret := os.Getenv("LINE_CHANNEL_SECRET")
-	if channelSecret == "" {
-		return "", fmt.Errorf("LINE_CHANNEL_SECRET must be set")
+	if channelSecret != "" {
+		return channelSecret, nil
 	}
-	// TOOD: get from secretmanager
+
+	s := &SecretManagerConfig{
+		versionID: defaultSecretVersion,
+	}
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	slog.Debug("rerieving channel secret from secret manager...")
+
+	channelSecret, err := accessSecretVersion(s)
+	if err != nil {
+		return "", fmt.Errorf("failed to get channel secret: %w", err)
+	}
 
 	return channelSecret, nil
 }
