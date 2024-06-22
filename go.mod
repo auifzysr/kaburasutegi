@@ -4,6 +4,7 @@ go 1.22.1
 
 require (
 	cloud.google.com/go/secretmanager v1.13.1
+	github.com/GoogleCloudPlatform/functions-framework-go v1.8.1
 	github.com/line/line-bot-sdk-go/v8 v8.7.0
 	github.com/urfave/cli/v2 v2.27.2
 )
@@ -13,7 +14,6 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	cloud.google.com/go/compute/metadata v0.3.0 // indirect
 	cloud.google.com/go/iam v1.1.8 // indirect
-	github.com/GoogleCloudPlatform/functions-framework-go v1.8.1 // indirect
 	github.com/cloudevents/sdk-go/v2 v2.14.0 // indirect
 	github.com/cpuguy83/go-md2man/v2 v2.0.4 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
