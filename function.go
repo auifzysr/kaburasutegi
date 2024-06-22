@@ -14,3 +14,5 @@ func init() {
 func serve(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "Entrypoint")
 }
+
+// cloud functions does not allow main package to reside here
