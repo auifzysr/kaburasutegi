@@ -4,7 +4,44 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+
+	"github.com/auifzysr/kaburasutegi/domain"
+	"github.com/auifzysr/kaburasutegi/infra"
+	"github.com/auifzysr/kaburasutegi/service"
 )
+
+func LocalSetup(projectID, channelSecretSecretID, channelTokenSecretID string) (string, *service.Service) {
+	if env := Env(); env == "local" {
+		slog.SetLogLoggerLevel(slog.LevelDebug)
+	} else {
+		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+		slog.SetLogLoggerLevel(slog.LevelInfo)
+	}
+
+	var err error
+	channelSecret, err := LineChannelSecret(
+		WithProjectID(projectID),
+		WithSecretID(channelSecretSecretID),
+	)
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+	channelToken, err := LineChannelToken(
+		WithProjectID(projectID),
+		WithSecretID(channelTokenSecretID),
+	)
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+	port := Port()
+
+	s := service.New(channelToken, channelSecret,
+		&domain.Register{}, &infra.LocalRecord{})
+
+	return port, s
+}
 
 func LineChannelToken(opts ...SecretManagerParam) (string, error) {
 	channelToken := os.Getenv("LINE_CHANNEL_TOKEN")
