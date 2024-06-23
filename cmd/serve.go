@@ -8,11 +8,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var (
-	channelSecret string
-	channelToken  string
-)
-
 const (
 	defaultHostname = "0.0.0.0"
 )
