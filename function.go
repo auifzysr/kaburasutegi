@@ -1,7 +1,6 @@
 package function
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
@@ -9,12 +8,12 @@ import (
 )
 
 func init() {
+	functions.HTTP("callback", entrypoint())
+}
+
+func entrypoint() func(w http.ResponseWriter, r *http.Request) {
 	_, s := handler.FunctionSetup()
-	functions.HTTP("Entrypoint", s.Respond())
-	functions.HTTP("healthcheck", healthcheck)
+	return s.Respond()
 }
 
 // cloud functions does not allow main package to reside here
-func healthcheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "ok")
-}

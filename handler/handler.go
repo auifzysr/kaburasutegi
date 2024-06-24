@@ -12,7 +12,7 @@ import (
 
 func FunctionSetup() (string, *service.Service) {
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
-	slog.SetLogLoggerLevel(slog.LevelInfo)
+	slog.SetLogLoggerLevel(slog.LevelDebug)
 
 	var err error
 	channelSecret, err := LineChannelSecret()
