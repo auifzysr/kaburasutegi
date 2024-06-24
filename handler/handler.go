@@ -10,6 +10,29 @@ import (
 	"github.com/auifzysr/kaburasutegi/service"
 )
 
+func FunctionSetup() (string, *service.Service) {
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+	slog.SetLogLoggerLevel(slog.LevelInfo)
+
+	var err error
+	channelSecret, err := LineChannelSecret()
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+	channelToken, err := LineChannelToken()
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+	port := Port()
+
+	s := service.New(channelToken, channelSecret,
+		&domain.Register{}, &infra.LocalRecord{})
+
+	return port, s
+}
+
 func LocalSetup(projectID, channelSecretSecretID, channelTokenSecretID string) (string, *service.Service) {
 	if env := Env(); env == "local" {
 		slog.SetLogLoggerLevel(slog.LevelDebug)
