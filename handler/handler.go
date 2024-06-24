@@ -11,8 +11,8 @@ import (
 )
 
 func FunctionSetup() (string, *service.Service) {
+	slog.SetLogLoggerLevel(LogLevel())
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
-	slog.SetLogLoggerLevel(slog.LevelDebug)
 
 	var err error
 	channelSecret, err := LineChannelSecret()
@@ -33,13 +33,23 @@ func FunctionSetup() (string, *service.Service) {
 	return port, s
 }
 
-func LocalSetup(projectID, channelSecretSecretID, channelTokenSecretID string) (string, *service.Service) {
-	if env := Env(); env == "local" {
-		slog.SetLogLoggerLevel(slog.LevelDebug)
-	} else {
-		slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
-		slog.SetLogLoggerLevel(slog.LevelInfo)
+func LogLevel() slog.Level {
+	switch os.Getenv("LOG_LEVEL") {
+	case "debug":
+		return slog.LevelDebug
+	case "info":
+		return slog.LevelInfo
+	case "warn":
+		return slog.LevelWarn
+	case "error":
+		return slog.LevelError
+	default:
+		return slog.LevelDebug
 	}
+}
+
+func LocalSetup(projectID, channelSecretSecretID, channelTokenSecretID string) (string, *service.Service) {
+	slog.SetLogLoggerLevel(LogLevel())
 
 	var err error
 	channelSecret, err := LineChannelSecret(

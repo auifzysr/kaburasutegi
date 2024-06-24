@@ -12,4 +12,5 @@ gcloud functions deploy $FUNCTION_NAME \
     --max-instances 1 \
     --allow-unauthenticated \
     --run-service-account=$FUNCTION_RUNNER_SERVICE_ACCOUNT_EMAIL \
-    --set-secrets=LINE_CHANNEL_TOKEN=$LINE_CHANNEL_TOKEN_SECRET_ID,LINE_CHANNEL_SECRET=$LINE_CHANNEL_SECRET_SECRET_ID
+    --set-secrets=LINE_CHANNEL_TOKEN=$LINE_CHANNEL_TOKEN_SECRET_ID,LINE_CHANNEL_SECRET=$LINE_CHANNEL_SECRET_SECRET_ID \
+    --set-env-vars=LOG_LEVEL=debug
