@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-type MessageHandler interface {
+type MessageBuilder interface {
 	Accept(text string) bool
 	BuildMessage(text string) string
 }

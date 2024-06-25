@@ -18,7 +18,7 @@ type Service struct {
 	channelToken  string
 	channelSecret string
 
-	messageHandler domain.MessageHandler
+	messageHandler domain.MessageBuilder
 	recorder       repository.Recorder
 }
 
@@ -38,8 +38,8 @@ func New(channelToken string, channelSecret string, opts ...interface{}) *Servic
 
 	for _, opt := range opts {
 		switch opt.(type) {
-		case domain.MessageHandler:
-			s.messageHandler = opt.(domain.MessageHandler)
+		case domain.MessageBuilder:
+			s.messageHandler = opt.(domain.MessageBuilder)
 		case repository.Recorder:
 			s.recorder = opt.(repository.Recorder)
 		default:
