@@ -8,46 +8,25 @@ import (
 	"os"
 
 	"github.com/auifzysr/kaburasutegi/domain"
-	"github.com/auifzysr/kaburasutegi/infra"
-	"github.com/auifzysr/kaburasutegi/repository"
 	"github.com/line/line-bot-sdk-go/v8/linebot/messaging_api"
 	"github.com/line/line-bot-sdk-go/v8/linebot/webhook"
 )
 
 type Service struct {
-	credential *domain.Credential
-
-	messageHandler domain.MessageBuilder
-	recorder       repository.Recorder
+	credential      *domain.Credential
+	messageHandlers []*MessageHandler
 }
 
-func New(credential *domain.Credential, opts ...interface{}) *Service {
+func New(credential *domain.Credential, handlers ...*MessageHandler) *Service {
 	s := &Service{
-		credential: credential,
-	}
-
-	for _, opt := range opts {
-		switch opt.(type) {
-		case domain.MessageBuilder:
-			s.messageHandler = opt.(domain.MessageBuilder)
-		case repository.Recorder:
-			s.recorder = opt.(repository.Recorder)
-		default:
-			slog.Error(fmt.Sprintf("Unsupported option: %T\n", opt))
-			os.Exit(1)
-		}
-	}
-	if s.messageHandler == nil {
-		s.messageHandler = domain.Nop{}
-	}
-	if s.recorder == nil {
-		s.recorder = &infra.LocalRecord{}
+		credential:      credential,
+		messageHandlers: handlers,
 	}
 
 	return s
 }
 
-func (s *Service) Respond() func(w http.ResponseWriter, req *http.Request) {
+func (s *Service) Reply() func(w http.ResponseWriter, req *http.Request) {
 	cli, err := messaging_api.NewMessagingApiAPI(s.credential.GetChannelToken())
 	if err != nil {
 		slog.Error(fmt.Sprintf("%s", err))
@@ -77,14 +56,17 @@ func (s *Service) Respond() func(w http.ResponseWriter, req *http.Request) {
 				case webhook.TextMessageContent:
 					var body string
 					slog.Debug(fmt.Sprintf("message: %+v", message))
-					if s.messageHandler.Accept(message.Text) {
-						body = s.messageHandler.BuildReply(message.Text)
-						slog.Debug(fmt.Sprintf("body: %s", body))
-						s.recorder.Record(body)
-					} else {
+					for _, h := range s.messageHandlers {
+						if h.messageBuilder.Accept(message.Text) {
+							body = h.messageBuilder.BuildReply(message.Text)
+							slog.Debug(fmt.Sprintf("body: %s", body))
+							h.recorder.Record(body)
+							break
+						}
 						body = "error: no such handler"
 					}
 
+					slog.Debug(fmt.Sprintf("body: %s", body))
 					if _, err = cli.ReplyMessage(
 						&messaging_api.ReplyMessageRequest{
 							ReplyToken: e.ReplyToken,

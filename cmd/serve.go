@@ -8,7 +8,6 @@ import (
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
 	"github.com/auifzysr/kaburasutegi/domain"
 	"github.com/auifzysr/kaburasutegi/handler"
-	"github.com/auifzysr/kaburasutegi/infra"
 	"github.com/auifzysr/kaburasutegi/service"
 	"github.com/urfave/cli/v2"
 )
@@ -18,7 +17,7 @@ const (
 )
 
 func serve(port string, s *service.Service) error {
-	functions.HTTP("callback", s.Respond())
+	functions.HTTP("callback", s.Reply())
 
 	return funcframework.StartHostPort(defaultHostname, port)
 }
@@ -58,7 +57,7 @@ func setup(projectID, channelSecretSecretID, channelTokenSecretID string) (strin
 
 	port := handler.Port()
 
-	s := service.New(c, &domain.Journal{}, &infra.LocalRecord{})
+	s := service.New(c, service.MessageHandlersList...)
 
 	return port, s
 }
