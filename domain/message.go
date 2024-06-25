@@ -8,7 +8,7 @@ import (
 
 type MessageBuilder interface {
 	Accept(text string) bool
-	BuildReply(text string) string
+	BuildReply(text string) string // TODO: BuildMessage instead
 }
 
 type Nop struct{}
