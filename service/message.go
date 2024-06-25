@@ -11,13 +11,7 @@ type MessageHandler struct {
 	recorder       repository.Recorder
 }
 
-var MessageHandlersList []*MessageHandler
-
-func init() {
-	makeMessageHandlersList()
-}
-
-func makeMessageHandlersList() {
-	MessageHandlersList = append(MessageHandlersList, &MessageHandler{&domain.Journal{}, &infra.LocalRecord{}})
-	MessageHandlersList = append(MessageHandlersList, &MessageHandler{&domain.Nop{}, &infra.Nop{}})
+var MessageHandlersList []*MessageHandler = []*MessageHandler{
+	{&domain.Journal{}, &infra.LocalRecord{}},
+	{&domain.Nop{}, &infra.Nop{}},
 }
