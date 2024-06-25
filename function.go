@@ -1,10 +1,15 @@
 package function
 
 import (
+	"log/slog"
 	"net/http"
+	"os"
 
 	"github.com/GoogleCloudPlatform/functions-framework-go/functions"
+	"github.com/auifzysr/kaburasutegi/domain"
 	"github.com/auifzysr/kaburasutegi/handler"
+	"github.com/auifzysr/kaburasutegi/infra"
+	"github.com/auifzysr/kaburasutegi/service"
 )
 
 func init() {
@@ -12,8 +17,33 @@ func init() {
 }
 
 func entrypoint() func(w http.ResponseWriter, r *http.Request) {
-	_, s := handler.FunctionSetup()
+	_, s := setup()
 	return s.Respond()
 }
 
 // cloud functions does not allow main package to reside here
+
+func setup() (string, *service.Service) {
+	slog.SetLogLoggerLevel(domain.LogLevel())
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stdout, nil)))
+
+	var err error
+	channelSecret, err := handler.LineChannelSecret()
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+	channelToken, err := handler.LineChannelToken()
+	if err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
+	}
+
+	c := domain.NewCredential(channelToken, channelSecret)
+
+	port := handler.Port()
+
+	s := service.New(c, &domain.Journal{}, &infra.LocalRecord{})
+
+	return port, s
+}
