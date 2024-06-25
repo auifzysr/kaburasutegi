@@ -2,6 +2,20 @@ package infra
 
 import "fmt"
 
+type Nop struct{}
+
+func (s *Nop) Record(text string) error {
+	return nil
+}
+
+func (s *Nop) RecordAt(id int, text string) error {
+	return nil
+}
+
+func (s *Nop) ReadAt(id int) (string, error) {
+	return "", nil
+}
+
 type LocalRecord struct {
 	records map[int]string
 }
