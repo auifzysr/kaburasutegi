@@ -28,7 +28,7 @@ func FunctionSetup() (string, *service.Service) {
 	port := Port()
 
 	s := service.New(channelToken, channelSecret,
-		&domain.Register{}, &infra.LocalRecord{})
+		&domain.Journal{}, &infra.LocalRecord{})
 
 	return port, s
 }
@@ -71,7 +71,7 @@ func LocalSetup(projectID, channelSecretSecretID, channelTokenSecretID string) (
 	port := Port()
 
 	s := service.New(channelToken, channelSecret,
-		&domain.Register{}, &infra.LocalRecord{})
+		&domain.Journal{}, &infra.LocalRecord{})
 
 	return port, s
 }

@@ -88,7 +88,7 @@ func (s *Service) Respond() func(w http.ResponseWriter, req *http.Request) {
 					var body string
 					slog.Debug(fmt.Sprintf("message: %+v", message))
 					if s.messageHandler.Accept(message.Text) {
-						body = s.messageHandler.BuildMessage(message.Text)
+						body = s.messageHandler.BuildReply(message.Text)
 						slog.Debug(fmt.Sprintf("body: %s", body))
 						s.recorder.Record(body)
 					} else {
