@@ -14,3 +14,8 @@ gcloud functions deploy $FUNCTION_NAME \
     --run-service-account=$FUNCTION_RUNNER_SERVICE_ACCOUNT_EMAIL \
     --set-secrets=LINE_CHANNEL_TOKEN=$LINE_CHANNEL_TOKEN_SECRET_ID,LINE_CHANNEL_SECRET=$LINE_CHANNEL_SECRET_SECRET_ID \
     --set-env-vars=LOG_LEVEL=debug
+
+# terraform apply \
+#   -var="project=kaburasutegi" \
+#   -var="line_channel_token_secret_id=$LINE_CHANNEL_TOKEN_SECRET_ID" \
+#   -var="line_channel_secret_secret_id=$LINE_CHANNEL_SECRET_SECRET_ID"
