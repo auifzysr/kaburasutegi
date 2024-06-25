@@ -25,10 +25,12 @@ func FunctionSetup() (string, *service.Service) {
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
+
+	c := domain.NewCredential(channelToken, channelSecret)
+
 	port := Port()
 
-	s := service.New(channelToken, channelSecret,
-		&domain.Journal{}, &infra.LocalRecord{})
+	s := service.New(c, &domain.Journal{}, &infra.LocalRecord{})
 
 	return port, s
 }
@@ -68,10 +70,12 @@ func LocalSetup(projectID, channelSecretSecretID, channelTokenSecretID string) (
 		slog.Error(err.Error())
 		os.Exit(1)
 	}
+
+	c := domain.NewCredential(channelToken, channelSecret)
+
 	port := Port()
 
-	s := service.New(channelToken, channelSecret,
-		&domain.Journal{}, &infra.LocalRecord{})
+	s := service.New(c, &domain.Journal{}, &infra.LocalRecord{})
 
 	return port, s
 }

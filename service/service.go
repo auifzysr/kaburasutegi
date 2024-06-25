@@ -15,26 +15,16 @@ import (
 )
 
 type Service struct {
-	channelToken  string
-	channelSecret string
+	credential *domain.Credential
 
 	messageHandler domain.MessageBuilder
 	recorder       repository.Recorder
 }
 
-func New(channelToken string, channelSecret string, opts ...interface{}) *Service {
-	if channelToken == "" {
-		slog.Error("channelToken is empty")
-		os.Exit(1)
+func New(credential *domain.Credential, opts ...interface{}) *Service {
+	s := &Service{
+		credential: credential,
 	}
-	if channelSecret == "" {
-		slog.Error("channelSecret is empty")
-		os.Exit(1)
-	}
-
-	s := &Service{}
-	s.channelSecret = channelSecret
-	s.channelToken = channelToken
 
 	for _, opt := range opts {
 		switch opt.(type) {
@@ -58,7 +48,7 @@ func New(channelToken string, channelSecret string, opts ...interface{}) *Servic
 }
 
 func (s *Service) Respond() func(w http.ResponseWriter, req *http.Request) {
-	cli, err := messaging_api.NewMessagingApiAPI(s.channelToken)
+	cli, err := messaging_api.NewMessagingApiAPI(s.credential.GetChannelToken())
 	if err != nil {
 		slog.Error(fmt.Sprintf("%s", err))
 		os.Exit(1)
@@ -67,7 +57,7 @@ func (s *Service) Respond() func(w http.ResponseWriter, req *http.Request) {
 	return func(w http.ResponseWriter, req *http.Request) {
 		slog.Info("/callback called...")
 
-		cb, err := webhook.ParseRequest(s.channelSecret, req)
+		cb, err := webhook.ParseRequest(s.credential.GetChannelSecret(), req)
 		if err != nil {
 			slog.Error(fmt.Sprintf("Cannot parse request: %+v\n", err))
 			if errors.Is(err, webhook.ErrInvalidSignature) {
