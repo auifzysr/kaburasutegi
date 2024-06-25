@@ -12,11 +12,11 @@ type Credential struct {
 
 func NewCredential(channelToken string, channelSecret string) *Credential {
 	if channelToken == "" {
-		slog.Error("channelToken is empty")
+		slog.Error("channelToken must not be empty")
 		os.Exit(1)
 	}
 	if channelSecret == "" {
-		slog.Error("channelSecret is empty")
+		slog.Error("channelSecret must not be empty")
 		os.Exit(1)
 	}
 
